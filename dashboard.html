@@ -1,0 +1,371 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergency Command Center</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            color: #172033;
+        }
+
+        header {
+            background: #101d35;
+            color: white;
+            padding: 24px 6%;
+        }
+
+        header h1 {
+            margin: 0 0 8px;
+            font-size: 27px;
+        }
+
+        header p {
+            color: #cbd5e1;
+            margin: 0;
+        }
+
+        main {
+            max-width: 1250px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .notice {
+            background: #dbeafe;
+            color: #1e40af;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 22px;
+            font-size: 14px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .card {
+            background: white;
+            padding: 22px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px #0f172a0b;
+        }
+
+        .card p {
+            margin: 0 0 12px;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .card h2 {
+            margin: 0;
+            font-size: 30px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 12px;
+            padding: 22px;
+            box-shadow: 0 3px 12px #0f172a0b;
+        }
+
+        .panel-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .panel-heading h2 {
+            margin: 0;
+            font-size: 21px;
+        }
+
+        button, select {
+            padding: 10px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            min-width: 850px;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 14px 12px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 14px;
+            vertical-align: top;
+        }
+
+        th {
+            background: #f8fafc;
+            color: #475569;
+        }
+
+        .status {
+            display: inline-block;
+            background: #fef3c7;
+            color: #92400e;
+            padding: 5px 9px;
+            border-radius: 20px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .empty {
+            padding: 30px;
+            text-align: center;
+            color: #64748b;
+        }
+
+        #message {
+            margin: 12px 0;
+            color: #b91c1c;
+            font-size: 14px;
+        }
+
+        .footer {
+            color: #64748b;
+            font-size: 12px;
+            text-align: center;
+            padding: 24px;
+        }
+
+        @media (max-width: 750px) {
+            .stats {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            header h1 {
+                font-size: 22px;
+            }
+
+            .panel {
+                padding: 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>🚑 Emergency Command Center</h1>
+        <p>AI Emergency Coordination Platform · Administrator Dashboard</p>
+    </header>
+
+    <main>
+        <div class="notice">
+            DEMO MODE — Requests are stored locally. No real ambulance
+            is dispatched and no hospital is contacted.
+        </div>
+
+        <section class="stats">
+            <div class="card">
+                <p>Total Requests</p>
+                <h2 id="totalCount">0</h2>
+            </div>
+
+            <div class="card">
+                <p>Submitted</p>
+                <h2 id="submittedCount">0</h2>
+            </div>
+
+            <div class="card">
+                <p>Assigned</p>
+                <h2 id="assignedCount">0</h2>
+            </div>
+
+            <div class="card">
+                <p>Completed</p>
+                <h2 id="completedCount">0</h2>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-heading">
+                <h2>Emergency Requests</h2>
+
+                <div>
+                    <select id="statusFilter" aria-label="Filter by status">
+                        <option value="All">All statuses</option>
+                        <option value="Submitted">Submitted</option>
+                        <option value="Assigned">Assigned</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+
+                    <button id="refreshButton" type="button">
+                        Refresh
+                    </button>
+                </div>
+            </div>
+
+            <p id="message" role="status"></p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Request ID</th>
+                            <th>Patient</th>
+                            <th>Emergency Type</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                            <th>Submitted At</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="emergencyTable">
+                        <tr>
+                            <td colspan="6" class="empty">
+                                Loading emergency requests...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <div class="footer">
+        Academic software prototype · Data from local SQLite database
+    </div>
+
+    <script>
+        const tableBody = document.getElementById("emergencyTable");
+        const message = document.getElementById("message");
+        const statusFilter = document.getElementById("statusFilter");
+
+        let emergencies = [];
+
+        function addCell(row, value) {
+            const cell = document.createElement("td");
+            cell.textContent = value ?? "";
+            row.appendChild(cell);
+            return cell;
+        }
+
+        function renderDashboard() {
+            document.getElementById("totalCount").textContent =
+                emergencies.length;
+
+            document.getElementById("submittedCount").textContent =
+                emergencies.filter(e => e.status === "Submitted").length;
+
+            document.getElementById("assignedCount").textContent =
+                emergencies.filter(e => e.status === "Assigned").length;
+
+            document.getElementById("completedCount").textContent =
+                emergencies.filter(e => e.status === "Completed").length;
+
+            const filter = statusFilter.value;
+
+            const filtered = emergencies.filter(e =>
+                filter === "All" || e.status === filter
+            );
+
+            tableBody.replaceChildren();
+
+            if (filtered.length === 0) {
+                const row = document.createElement("tr");
+                const cell = document.createElement("td");
+
+                cell.colSpan = 6;
+                cell.className = "empty";
+                cell.textContent = "No matching emergency requests.";
+
+                row.appendChild(cell);
+                tableBody.appendChild(row);
+                return;
+            }
+
+            filtered.forEach(emergency => {
+                const row = document.createElement("tr");
+
+                addCell(row, emergency.request_id);
+                addCell(row, emergency.patient_name);
+                addCell(row, emergency.emergency_type);
+                addCell(row, emergency.location);
+
+                const statusCell = addCell(row, "");
+                const badge = document.createElement("span");
+                badge.className = "status";
+                badge.textContent = emergency.status;
+                statusCell.appendChild(badge);
+
+                const date = emergency.created_at
+                    ? new Date(emergency.created_at).toLocaleString()
+                    : "Not available";
+
+                addCell(row, date);
+
+                tableBody.appendChild(row);
+            });
+        }
+
+        async function loadEmergencies() {
+            message.textContent = "Loading requests...";
+
+            try {
+                const response = await fetch("/api/emergencies");
+                const data = await response.json();
+
+                if (!response.ok || !Array.isArray(data)) {
+                    throw new Error(
+                        data.error || "Unexpected API response."
+                    );
+                }
+
+                emergencies = data;
+                message.textContent = "";
+                renderDashboard();
+
+            } catch (error) {
+                message.textContent =
+                    "Could not load requests: " + error.message;
+            }
+        }
+
+        document.getElementById("refreshButton")
+            .addEventListener("click", loadEmergencies);
+
+        statusFilter.addEventListener("change", renderDashboard);
+
+        loadEmergencies();
+    </script>
+</body>
+</html>
